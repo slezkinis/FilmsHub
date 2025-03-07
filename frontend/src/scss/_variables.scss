@@ -1,0 +1,19 @@
+:root {
+	--dark-color: #212121;
+	--add-dark-color: #3b3b3b;
+	--light-color: #eaebed;
+	--add-light-color: #7c7c7d;
+
+	--extra-color: #4c4c4c;
+	--accent-color: #fbb517;
+	--danger-color: #eb3333;
+
+	--main-color: var(--dark-color);
+	--add-color: var(--add-dark-color);
+	--font-color: var(--light-color);
+
+	// Шрифты идут с гугла через Next, вот их переменные:
+	// --logo-font - Лого (Orbitron)
+	// --heading-font - Заголовки (Prosto One)
+	// --default-font - Основной шрифт (Inter)
+}

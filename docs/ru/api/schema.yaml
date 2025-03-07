@@ -1,0 +1,1879 @@
+openapi: 3.0.3
+info:
+  title: ''
+  version: 1.0.0
+paths:
+  /api/movies/:
+    get:
+      operationId: api_movies_list
+      description: Получить список фильмов. Поддерживает поиск по названию и фильтрацию.
+        Возвращает в том числе локальные фильмы (созданные пользователем), фильмы
+        отсортированы по рейтингу по убыванию.
+      parameters:
+      - in: query
+        name: director
+        schema:
+          type: string
+        description: Режиссер
+      - in: query
+        name: list_of_actors
+        schema:
+          type: string
+        description: Список актеров
+      - in: query
+        name: list_of_countries
+        schema:
+          type: string
+        description: Список стран
+      - in: query
+        name: list_of_genres
+        schema:
+          type: string
+        description: Список жанров
+      - in: query
+        name: list_of_types
+        schema:
+          type: string
+        description: Список типов (tv-series, movie и т.д.)
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Поиск по названию фильма (регистронезависимый)
+      - in: query
+        name: year_end
+        schema:
+          type: integer
+        description: Конец периода поиска по году
+      - in: query
+        name: year_start
+        schema:
+          type: integer
+        description: Начало периода поиска по году
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMovieList'
+          description: ''
+        '400':
+          description: Ошибка валидации в query параметрах
+    post:
+      operationId: api_movies_create
+      description: Добавить фильм, фильм создается только для данного пользователя,
+        остальным он недоступен (local=True)
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MovieRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/MovieRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/MovieRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  field_name1:
+                    type: array
+                    items:
+                      type: string
+                      example: Ошибка валидации 1
+                  field_name2:
+                    type: array
+                    items:
+                      type: string
+                      example: Ошибка валидации 3
+                  non_field_errors:
+                    type: array
+                    items:
+                      type: string
+                      example: Ошибки не связанные с конкретным полем
+                example:
+                  field_name1:
+                  - Ошибка валидации 1
+                  - Ошибка валидации 2
+                  field_name2:
+                  - Ошибка валидации 3
+                  non_field_errors:
+                  - Ошибки не связанные с конкретным полем
+          description: Ошибка валидации, в ответе ошибки по конкретным полям и ошибки
+            не связанные с конкретными полями
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '404':
+          description: Переданные актеры или режиссер не существуют
+  /api/movies/{id}/:
+    get:
+      operationId: api_movies_retrieve
+      description: Получить фильм по id, можно получить как локальные (только свои)
+        так и общие
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this film.
+        required: true
+      tags:
+      - api
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+    delete:
+      operationId: api_movies_destroy
+      description: Удалить фильм, удалить можно только свои локальные фильмы
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this film.
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '403':
+          description: Нет прав для удаления
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '404':
+          description: Такого фильма не существует
+  /api/movies/actors/:
+    get:
+      operationId: api_movies_actors_list
+      description: Получить список актеров c поиском
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Поиск по имени (регистронезависимый)
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedActorIdList'
+          description: ''
+  /api/movies/actors/{actor_id}/:
+    get:
+      operationId: api_movies_actors_retrieve
+      description: Получить актера
+      parameters:
+      - in: path
+        name: actor_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActorId'
+          description: ''
+        '404':
+          description: Такого актера не существует
+  /api/movies/directors/:
+    get:
+      operationId: api_movies_directors_list
+      description: Получить список режиссеров c поиском
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Поиск по имени (регистронезависимый)
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDirectorIdList'
+          description: ''
+  /api/movies/directors/{director_id}/:
+    get:
+      operationId: api_movies_directors_retrieve
+      description: Получить режиссера
+      parameters:
+      - in: path
+        name: director_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DirectorId'
+          description: ''
+        '404':
+          description: Такого режиссера не существует
+  /api/movies/genres/:
+    get:
+      operationId: api_movies_genres_retrieve
+      description: Получить список жанров
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                - комедия
+                - романтика
+                - боевик
+          description: ''
+  /api/recommend/ai/similiar/:
+    post:
+      operationId: api_recommend_ai_similiar_create
+      description: Получить рекомендации по схожим фильмам с помощью AI
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimiliarRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  result: ai_response
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '400':
+          description: Ошибка от нейронки (неправильные данные)
+  /api/recommend/ai/wish/:
+    post:
+      operationId: api_recommend_ai_wish_create
+      description: Получить рекомендации по желанию от AI
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WishRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                example:
+                  result: ai_response
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '400':
+          description: Ошибка от нейронки (неправильные данные)
+  /api/recommend/default/:
+    get:
+      operationId: api_recommend_default_list
+      description: Получить рекомендованные фильмы на основе текущих лайков, дизлайков
+        и других букмарков, основная ручка для рекомендаций
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMovieList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+  /api/status/:
+    get:
+      operationId: api_status_retrieve
+      description: Ручка проверки работоспособности API (используется при деплое)
+      tags:
+      - api
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/users/auth/login/:
+    post:
+      operationId: api_users_auth_login_create
+      description: Авторизация по JWT
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  field_name1:
+                    type: array
+                    items:
+                      type: string
+                      example: Ошибка валидации 1
+                  field_name2:
+                    type: array
+                    items:
+                      type: string
+                      example: Ошибка валидации 3
+                  non_field_errors:
+                    type: array
+                    items:
+                      type: string
+                      example: Ошибки не связанные с конкретным полем
+                example:
+                  field_name1:
+                  - Ошибка валидации 1
+                  - Ошибка валидации 2
+                  field_name2:
+                  - Ошибка валидации 3
+                  non_field_errors:
+                  - Ошибки не связанные с конкретным полем
+          description: Ошибка валидации, в ответе ошибки по конкретным полям и ошибки
+            не связанные с конкретными полями
+        '401':
+          description: Пароль или почта неправильные
+  /api/users/auth/logout/:
+    post:
+      operationId: api_users_auth_logout_create
+      description: Выход из аккаунта
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: Выход успешный, токен добавлен в black list
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+  /api/users/auth/sign-up/:
+    post:
+      operationId: api_users_auth_sign_up_create
+      description: Регистрация пользователя
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UserRegistrationRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegistration'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  field_name1:
+                    type: array
+                    items:
+                      type: string
+                      example: Ошибка валидации 1
+                  field_name2:
+                    type: array
+                    items:
+                      type: string
+                      example: Ошибка валидации 3
+                  non_field_errors:
+                    type: array
+                    items:
+                      type: string
+                      example: Ошибки не связанные с конкретным полем
+                example:
+                  field_name1:
+                  - Ошибка валидации 1
+                  - Ошибка валидации 2
+                  field_name2:
+                  - Ошибка валидации 3
+                  non_field_errors:
+                  - Ошибки не связанные с конкретным полем
+          description: Ошибка валидации, в ответе ошибки по конкретным полям и ошибки
+            не связанные с конкретными полями
+        '409':
+          description: Пользователь с таким email уже существует
+  /api/users/auth/token/refresh/:
+    post:
+      operationId: api_users_auth_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/users/auth/token/verify/:
+    post:
+      operationId: api_users_auth_token_verify_create
+      description: |-
+        Takes a token and indicates if it is valid.  This view provides no
+        information about a token's fitness for a particular use.
+      tags:
+      - api
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenVerifyRequest'
+        required: true
+      responses:
+        '200':
+          description: No response body
+  /api/users/delete/:
+    delete:
+      operationId: api_users_delete_destroy
+      description: Удалить пользователя
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: Аккаунт успешно удален
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+  /api/users/movies/:
+    get:
+      operationId: api_users_movies_list
+      description: Получить локальные фильмы пользователя (local=True)
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMovieList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+  /api/users/movies/{movie_id}/bookmarks/aside/:
+    post:
+      operationId: api_users_movies_bookmarks_aside_create
+      description: Добавить в пересматриваемые
+      parameters:
+      - in: path
+        name: movie_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: Фильм добавлен в те которые пользователь хочет пересмотреть
+            (букмарка создана)
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '404':
+          description: Такого фильма не существует
+  /api/users/movies/{movie_id}/bookmarks/current/:
+    get:
+      operationId: api_users_movies_bookmarks_current_retrieve
+      description: Получить текущий тип букмарки на фильме, если пользователь не
+        ставил букмарку на этот фильм то в type будет null, a worth_bookmark будет
+        True
+      parameters:
+      - in: path
+        name: movie_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentBookmark'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '404':
+          description: Такого фильма не существует
+  /api/users/movies/{movie_id}/bookmarks/delete/:
+    delete:
+      operationId: api_users_movies_bookmarks_delete_destroy
+      description: Удалить букмарку с фильма (удаляет любой тип букмарки с фильма)
+      parameters:
+      - in: path
+        name: movie_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '404':
+          description: Такого фильма не существует
+  /api/users/movies/{movie_id}/bookmarks/dislike/:
+    post:
+      operationId: api_users_movies_bookmarks_dislike_create
+      description: Добавить в дизлайкнутые, перезаписывает текущую букмарку для этого
+        фильма
+      parameters:
+      - in: path
+        name: movie_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: Дизлайк успешно поставлен (букмарка создана)
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '404':
+          description: Такого фильма не существует
+  /api/users/movies/{movie_id}/bookmarks/like/:
+    post:
+      operationId: api_users_movies_bookmarks_like_create
+      description: Добавить в лайкнутые, перезаписывает текущую букмарку для этого
+        фильма
+      parameters:
+      - in: path
+        name: movie_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: Лайк успешно поставлен (букмарка создана)
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '404':
+          description: Такого фильма не существует
+  /api/users/movies/{movie_id}/bookmarks/view/:
+    post:
+      operationId: api_users_movies_bookmarks_view_create
+      description: Добавить в просмотренное (фильмы которые пользователь уже смотрел
+        и не хочет пересматривать), перезаписывает текущую букмарку для этого фильма
+      parameters:
+      - in: path
+        name: movie_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          description: Фильм добавлен в те которые пользователь уже смотрел (букмарка
+            создана)
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+        '404':
+          description: Такого фильма не существует
+  /api/users/movies/aside/:
+    get:
+      operationId: api_users_movies_aside_list
+      description: Получить фильмы которые пользователь хочет пересмотреть
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMovieList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+  /api/users/movies/disliked/:
+    get:
+      operationId: api_users_movies_disliked_list
+      description: Получить дизлайкнутые фильмы
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMovieList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+  /api/users/movies/liked/:
+    get:
+      operationId: api_users_movies_liked_list
+      description: Получить лайкнутые фильмы
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMovieList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+  /api/users/movies/viewed/:
+    get:
+      operationId: api_users_movies_viewed_list
+      description: Получить просмотренные фильмы
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - api
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedMovieList'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                example:
+                  detail: Given token not valid for any token type
+                  code: token_not_valid
+                  messages:
+                  - token_class: AccessToken
+                    token_type: access
+                    message: Token is invalid
+              examples:
+                ТокенНеПередан:
+                  value:
+                    detail: Учетные данные не были предоставлены.
+                  summary: Токен не передан
+                ТокенНевалиден:
+                  value:
+                    detail: Given token not valid for any token type
+                    code: token_not_valid
+                    messages:
+                    - token_class: AccessToken
+                      token_type: access
+                      message: Token is invalid
+                  summary: Токен невалиден
+          description: Авторизация не пройдена, либо токен не был передан, либо он
+            истек, либо он некорректный
+components:
+  schemas:
+    Actor:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+          title: Имя
+        english_name:
+          type: string
+          nullable: true
+          title: Английское название
+        photo:
+          type: string
+          format: uri
+          nullable: true
+          title: Фото
+          maxLength: 200
+        id:
+          type: integer
+          readOnly: true
+      required:
+      - id
+    ActorId:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+          title: Имя
+        photo:
+          type: string
+          format: uri
+          nullable: true
+          title: Фото
+          maxLength: 200
+        english_name:
+          type: string
+          nullable: true
+          title: Английское название
+      required:
+      - id
+    ActorRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+          title: Имя
+        english_name:
+          type: string
+          nullable: true
+          title: Английское название
+        photo:
+          type: string
+          format: uri
+          nullable: true
+          title: Фото
+          maxLength: 200
+    CurrentBookmark:
+      type: object
+      properties:
+        type:
+          type: string
+          readOnly: true
+          nullable: true
+        worth_bookmark:
+          type: boolean
+          readOnly: true
+      required:
+      - type
+      - worth_bookmark
+    Director:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+          title: Имя
+        english_name:
+          type: string
+          nullable: true
+          title: Английское название
+        photo:
+          type: string
+          format: uri
+          nullable: true
+          title: Фото
+          maxLength: 200
+        id:
+          type: integer
+          readOnly: true
+      required:
+      - id
+    DirectorId:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          nullable: true
+          title: Имя
+        photo:
+          type: string
+          format: uri
+          nullable: true
+          title: Фото
+          maxLength: 200
+        english_name:
+          type: string
+          nullable: true
+          title: Английское название
+      required:
+      - id
+    DirectorRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+          title: Имя
+        english_name:
+          type: string
+          nullable: true
+          title: Английское название
+        photo:
+          type: string
+          format: uri
+          nullable: true
+          title: Фото
+          maxLength: 200
+    Fact:
+      type: object
+      properties:
+        fact:
+          type: string
+          title: Текст факта
+        is_spoiler:
+          type: boolean
+          title: Это спойлер
+      required:
+      - fact
+    FactRequest:
+      type: object
+      properties:
+        fact:
+          type: string
+          minLength: 1
+          title: Текст факта
+        is_spoiler:
+          type: boolean
+          title: Это спойлер
+      required:
+      - fact
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 255
+        password:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - email
+      - password
+    LogoutRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - refresh
+    Movie:
+      type: object
+      properties:
+        year:
+          type: number
+          format: double
+          maximum: 2100
+          minimum: 1800
+          title: Год релиза
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Fact'
+          description: Факты о фильме
+        rating:
+          type: number
+          format: double
+          maximum: 10
+          minimum: 0
+          title: Рейтинг
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 100
+        poster:
+          type: string
+          format: uri
+          nullable: true
+          title: Постер
+          maxLength: 200
+        english_name:
+          type: string
+          nullable: true
+          title: Английское название
+          maxLength: 100
+        alternative_name:
+          type: string
+          nullable: true
+          title: Альтернативное название
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          title: Описание
+        director:
+          allOf:
+          - $ref: '#/components/schemas/Director'
+          readOnly: true
+        watch:
+          type: string
+          format: uri
+          nullable: true
+          title: Ссылка на ресурс для просмотра
+          maxLength: 200
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          title: Тип
+        genres:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          title: Жанры
+        countries:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+          nullable: true
+          title: Страны
+        actors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Actor'
+          readOnly: true
+        trailer:
+          type: string
+          format: uri
+          nullable: true
+          title: Трейлер
+          maxLength: 200
+        movie_length:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Длина фильма в минутах
+        local:
+          type: boolean
+          readOnly: true
+          description: Отображает локальный ли этот фильм (создан пользователем),
+            если пользователь не авторизован то False всегда
+      required:
+      - actors
+      - director
+      - genres
+      - id
+      - local
+      - name
+      - rating
+      - type
+      - year
+    MovieRequest:
+      type: object
+      properties:
+        year:
+          type: number
+          format: double
+          maximum: 2100
+          minimum: 1800
+          title: Год релиза
+        director_id:
+          type: integer
+          writeOnly: true
+        actors_ids:
+          type: array
+          items:
+            type: integer
+          writeOnly: true
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FactRequest'
+          description: Факты о фильме
+        rating:
+          type: number
+          format: double
+          maximum: 10
+          minimum: 0
+          title: Рейтинг
+        name:
+          type: string
+          minLength: 1
+          title: Название
+          maxLength: 100
+        poster:
+          type: string
+          format: uri
+          nullable: true
+          title: Постер
+          maxLength: 200
+        english_name:
+          type: string
+          nullable: true
+          title: Английское название
+          maxLength: 100
+        alternative_name:
+          type: string
+          nullable: true
+          title: Альтернативное название
+          maxLength: 100
+        description:
+          type: string
+          nullable: true
+          title: Описание
+        watch:
+          type: string
+          format: uri
+          nullable: true
+          title: Ссылка на ресурс для просмотра
+          maxLength: 200
+        type:
+          allOf:
+          - $ref: '#/components/schemas/TypeEnum'
+          title: Тип
+        genres:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+          title: Жанры
+        countries:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+          nullable: true
+          title: Страны
+        trailer:
+          type: string
+          format: uri
+          nullable: true
+          title: Трейлер
+          maxLength: 200
+        movie_length:
+          type: integer
+          maximum: 2147483647
+          minimum: -2147483648
+          nullable: true
+          title: Длина фильма в минутах
+      required:
+      - genres
+      - name
+      - rating
+      - type
+      - year
+    PaginatedActorIdList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActorId'
+    PaginatedDirectorIdList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/DirectorId'
+    PaginatedMovieList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Movie'
+    SimiliarRequestRequest:
+      type: object
+      properties:
+        film:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - film
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    TokenVerifyRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - token
+    TypeEnum:
+      enum:
+      - movie
+      - tv-series
+      - cartoon
+      - anime
+      - animated-series
+      - tv-show
+      type: string
+      description: |-
+        * `movie` - Фильм
+        * `tv-series` - Сериал
+        * `cartoon` - Мультфильм
+        * `anime` - Аниме
+        * `animated-series` - Мульт сериал
+        * `tv-show` - Телешоу
+    UserRegistration:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          title: Почта
+          maxLength: 254
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - email
+      - refresh
+    UserRegistrationRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          title: Почта
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    WishRequestRequest:
+      type: object
+      properties:
+        wish:
+          type: string
+          minLength: 1
+          maxLength: 255
+      required:
+      - wish
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

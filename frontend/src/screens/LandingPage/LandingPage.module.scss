@@ -1,0 +1,78 @@
+.page {
+	height: 100vh;
+	margin-top: -100px;
+}
+
+.wrapper {
+	max-width: 1140px;
+	height: 100%;
+	margin: 0 auto;
+	padding: 20px;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-around;
+
+	background-image: url("/landing-img.png");
+	background-size: 100%;
+	background-repeat: no-repeat;
+	background-position: center bottom;
+}
+
+.slogan {
+	font-family: var(--heading-font);
+	font-size: clamp(1rem, 4vw, 1.35rem);
+	text-align: center;
+}
+
+.info {
+	margin-bottom: 15%;
+}
+
+.title {
+	font-size: clamp(3rem, calc(6vw + 2rem), 10rem);
+	font-family: var(--logo-font);
+	line-height: 1;
+	text-align: center;
+	color: var(--accent-color);
+}
+
+.advantages {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+}
+
+.advantages-separator {
+	color: var(--accent-color);
+}
+
+.advantages-mobile {
+	display: none;
+	text-align: center;
+}
+
+.btn {
+	width: 100%;
+	max-width: 250px;
+}
+
+/* Адаптив */
+
+@media (max-width: 768px) {
+	.advantages-mobile {
+		display: block;
+	}
+
+	.advantages {
+		display: none;
+	}
+}
+
+@media (max-width: 1024px) {
+	.wrapper {
+		background-size: cover;
+	}
+}

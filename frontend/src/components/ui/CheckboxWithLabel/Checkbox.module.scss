@@ -1,0 +1,12 @@
+.checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+
+	& input {
+		display: none;
+	}
+	& input:checked + svg {
+		color: var(--accent-color);
+	}
+}

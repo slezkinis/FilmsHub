@@ -1,0 +1,90 @@
+from django.urls import path
+from rest_framework_simplejwt.views import (
+    TokenRefreshView,
+    TokenVerifyView,
+)
+
+from users import views
+
+
+urlpatterns = [
+    path(
+        "auth/sign-up/",
+        views.UserRegistrationView.as_view(),
+        name="signup",
+    ),
+    path(
+        "auth/login/",
+        views.LoginView.as_view(),
+        name="login",
+    ),
+    path(
+        "auth/token/refresh/",
+        TokenRefreshView.as_view(),
+        name="token_refresh",
+    ),
+    path(
+        "auth/token/verify/",
+        TokenVerifyView.as_view(),
+        name="token_verify",
+    ),
+    path(
+        "movies/<int:movie_id>/bookmarks/delete/",
+        views.BookmarkDestroyView.as_view(),
+    ),
+    path(
+        "movies/<int:movie_id>/bookmarks/like/",
+        views.LikeCreateView.as_view(),
+    ),
+    path(
+        "movies/<int:movie_id>/bookmarks/dislike/",
+        views.DislikeCreateView.as_view(),
+    ),
+    path(
+        "movies/<int:movie_id>/bookmarks/aside/",
+        views.AsideCreateView.as_view(),
+    ),
+    path(
+        "movies/<int:movie_id>/bookmarks/view/",
+        views.ViewedCreateView.as_view(),
+    ),
+    path(
+        "movies/<int:movie_id>/bookmarks/like/",
+        views.LikeCreateView.as_view(),
+    ),
+    path(
+        "movies/<int:movie_id>/bookmarks/current/",
+        views.CurrentBookmarkView.as_view(),
+    ),
+    path(
+        "movies/liked/",
+        views.LikeListView.as_view(),
+    ),
+    path(
+        "movies/disliked/",
+        views.DislikeListView.as_view(),
+    ),
+    path(
+        "movies/aside/",
+        views.AsideListView.as_view(),
+    ),
+    path(
+        "movies/viewed/",
+        views.ViewedListView.as_view(),
+    ),
+    path(
+        "auth/logout/",
+        views.LogoutView.as_view(),
+        name="logout",
+    ),
+    path(
+        "delete/",
+        views.DeleteUserView.as_view(),
+        name="delete",
+    ),
+    path(
+        "movies/",
+        views.MovieLocalView.as_view(),
+        name="movies",
+    ),
+]

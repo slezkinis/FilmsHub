@@ -1,0 +1,23 @@
+.switching {
+	margin-top: 20px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 20px;
+}
+
+.switch-btn {
+	width: 40px;
+	height: 40px;
+	background-color: var(--extra-color);
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--font-color);
+}
+
+.switch-btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}

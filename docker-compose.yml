@@ -1,0 +1,72 @@
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: api_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+    networks:
+      - main_network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d api_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    ports:
+      - "5432:5432"
+
+  api:
+    build: ./backend
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: db
+      DJANGO_DEBUG: ${DJANGO_DEBUG}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS}
+      TOGETHER_URL: ${TOGETHER_URL}
+      TOGETHER_API: ${TOGETHER_API}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./api/src/media:/app/src/media
+    ports:
+      - "8000:8000"
+    networks:
+      - main_network
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    networks:
+      - main_network
+    # volumes:
+
+  nginx:
+    build: ./backend/nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - frontend
+    networks:
+      - main_network
+    # volumes:
+    #   - ./api/src/media:/app/src/media
+    #   - static_volume:/app/.next/static
+
+volumes:
+  postgres_data:
+  # static_volume:
+
+networks:
+  main_network:
+    driver: bridge

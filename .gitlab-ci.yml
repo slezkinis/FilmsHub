@@ -1,0 +1,78 @@
+include:
+  - project: pipelines/pipelines
+    ref: master
+    file:
+      - "/jobs/docker.yaml"
+      - "/jobs/rules.yaml"
+      - "/jobs/build.yaml"
+
+.global-variables:
+  variables:
+    SSH_USER: "$ENV_SSH_USER"
+    SSH_HOST: "$ENV_SSH_HOST"
+    SSH_PRIVATE_KEY_BASE64: "$ENV_PRIVATE_KEY_BASE64"
+
+stages:
+  - flake8
+  - tests
+  - deploy
+
+deploy:
+  stage: deploy
+  extends:
+    - .docker_run
+    - .global-variables
+    - .rules-master
+  variables:
+    OPT_DOCKER: "-p 80:80"
+  script:
+    - AUTH_COMMAND="echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin";
+    - ssh $SSH_ADDRESS "$AUTH_COMMAND"
+    - echo "DJANGO_SECRET_KEY=django-insecure-@9b1@k3flporj=2unq2+c8yq_6=1oa%ecd0lcjpj_mkph5_quo" >> .env
+    - echo "DJANGO_DEBUG=true" >> .env
+    - echo "POSTGRES_DB=api_db" >> .env
+    - echo "POSTGRES_USER=postgres" >> .env
+    - echo "POSTGRES_PASSWORD=postgres" >> .env
+    - echo "POSTGRES_HOST=localhost" >> .env
+    - echo "DJANGO_ALLOWED_HOSTS=*" >> .env
+    - echo "SERVER_URL=http://prod-team-42-p2j2ueen.final.prodcontest.ru/api" >> .env
+    - echo "TOGETHER_API=$TOGETHER_API" >> .env
+    - echo TOGETHER_URL = "https://api.together.xyz/v1/chat/completions" >> .env
+    - scp -r . $SSH_ADDRESS:~/app
+    - ssh $SSH_ADDRESS "chmod +x app/stop_containers.sh"
+    - ssh $SSH_ADDRESS "./app/stop_containers.sh"
+    - ssh $SSH_ADDRESS "
+      cd app && docker compose --env-file .env up -d --build"
+    - ssh $SSH_ADDRESS "$PRUNE_COMMAND"
+
+flake8-check:
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq postgresql-client
+    - python -m pip install --upgrade pip
+    - pip install -r backend/requirements.txt
+
+  stage: flake8
+  image: python:3.13
+  script:
+    - cd backend/
+    - flake8 .
+
+django_tests:
+  services:
+    - postgres:13
+  variables:
+    POSTGRES_DB: test_db
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: test123
+    POSTGRES_HOST: postgres
+    POSTGRES_PORT: 5432
+  before_script:
+    - apt-get update -qq && apt-get install -y -qq postgresql-client
+    - python -m pip install --upgrade pip
+    - pip install -r backend/requirements.txt
+
+  stage: tests
+  image: python:3.13
+  script:
+    - cd backend/src
+    - python3 manage.py test

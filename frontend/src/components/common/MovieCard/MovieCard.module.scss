@@ -1,0 +1,78 @@
+.movie-card {
+	transition: all 0.3s;
+	width: 160px;
+	border-radius: 5px;
+	overflow: hidden;
+	cursor: pointer;
+	position: relative;
+
+	& img {
+		object-fit: cover;
+		width: 100%;
+		height: 225px;
+		transition: filter 0.3s;
+	}
+}
+
+.sub {
+	display: flex;
+	justify-content: space-between;
+}
+
+.content {
+	padding: 0.25rem;
+
+	& h3 {
+		font-weight: 600;
+		font-size: 1.35rem;
+		margin-bottom: 0.25rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	& .good {
+		color: var(--accent-color);
+	}
+
+	& .average {
+		color: var(--extra-color);
+	}
+
+	& .bad {
+		color: var(--danger-color);
+	}
+}
+
+.actions {
+	background-color: var(--extra-color);
+	position: absolute;
+	bottom: 0;
+	padding: 0.25rem;
+
+	& button {
+		text-align: left;
+		width: 100%;
+		padding: 0.25rem;
+		transition: background-color 0.2s;
+	}
+}
+
+.actions button:active {
+	translate: 0 0.1em;
+}
+
+@media (hover: hover) {
+	.movie-card:hover :is(.content, img) {
+		background-color: var(--main-color);
+		filter: brightness(65%);
+	}
+
+	.actions button:hover {
+		background-color: var(--add-color);
+	}
+
+	.actions button.selected {
+		color: var(--accent-color);
+	}
+}

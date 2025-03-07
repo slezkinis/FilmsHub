@@ -1,0 +1,37 @@
+/* - Подготовка к стилизации - */
+
+/* Сброс дефолтных стилей */
+@use "reset";
+
+/* Переменные */
+@use "variables";
+
+/* - Стилизация - */
+
+/* Глобальные стили */
+html {
+	font-size: 16px; // Заглушка
+}
+
+body {
+	color: var(--font-color);
+	font-family: var(--default-font);
+	background-color: var(--main-color);
+	background-image: linear-gradient(
+		90deg,
+		rgb(0, 0, 0, 0.25),
+		transparent,
+		rgb(0, 0, 0, 0.25)
+	);
+	background-attachment: fixed;
+}
+
+.main {
+	margin-top: 100px;
+	min-height: calc(100vh - 100px);
+}
+
+h2 {
+	font-family: var(--heading-font);
+	font-size: 1.65rem;
+}

@@ -1,0 +1,101 @@
+.button {
+	width: fit-content;
+
+	font-size: 1.25rem;
+	font-weight: 500;
+	color: var(--dark-color);
+	padding: 1rem 2rem;
+	background-color: var(--accent-color);
+	border-radius: 25px;
+
+	transition-property: box-shadow, translate, opacity;
+	transition-duration: 0.25s, 0.15s, 0.15s;
+
+	&.secondary {
+		background-color: var(--extra-color);
+		color: var(--light-color);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.75 !important;
+		translate: 0 !important;
+		box-shadow: none !important;
+	}
+}
+
+.outlined-button {
+	width: fit-content;
+
+	font-size: 1.15rem;
+	font-weight: 500;
+	padding: 1rem 2rem;
+	border: 1px solid var(--accent-color);
+	border-radius: 25px;
+
+	transition-property: background-color, color, opacity, translate;
+
+	&.danger {
+		border-color: var(--danger-color);
+	}
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.75 !important;
+		translate: 0 !important;
+		background-color: transparent !important;
+		color: var(--font-color) !important;
+	}
+}
+
+/* Адаптив */
+@media (hover: hover) {
+	.button {
+		&:hover {
+			box-shadow: 0 0 10px var(--accent-color);
+		}
+
+		&.secondary:hover {
+			box-shadow: 0 0 10px var(--extra-color);
+		}
+
+		&:active {
+			translate: 0 0.1em;
+			opacity: 0.75;
+		}
+	}
+
+	.outlined-button {
+		transition-duration: 0.25s, 0.25s, 0.15s, 0.15s;
+
+		&:hover {
+			background-color: var(--accent-color);
+			color: var(--dark-color);
+		}
+
+		&.danger:hover {
+			background-color: var(--danger-color);
+			color: var(--font-color);
+		}
+
+		&:active {
+			opacity: 0.75;
+			translate: 0 0.1em;
+		}
+	}
+}
+
+@media (hover: none) {
+	.outlined-button {
+		transition-duration: 0.15s, 0.15s, 0.15s, 0.15s;
+
+		&:active {
+			background-color: var(--accent-color);
+		}
+
+		&.danger:active {
+			background-color: var(--danger-color);
+			color: var(--font-color);
+		}
+	}
+}

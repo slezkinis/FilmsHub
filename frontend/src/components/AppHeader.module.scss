@@ -1,0 +1,135 @@
+.header {
+	height: 100px;
+	border-bottom: 1px solid var(--extra-color);
+	position: fixed;
+	width: 100%;
+	z-index: 10;
+	top: 0;
+	left: 0;
+	background-color: var(--main-color);
+	background-image: linear-gradient(
+		90deg,
+		rgb(0, 0, 0, 0.25),
+		transparent,
+		rgb(0, 0, 0, 0.25)
+	);
+}
+
+.content {
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 28px;
+	padding: 0 16px;
+	margin: 0 auto;
+	width: 100%;
+	max-width: 1140px;
+}
+
+.logo {
+	font-family: var(--logo-font);
+	font-size: clamp(1.75rem, calc(0.8rem + 2vw), 2.25rem);
+}
+
+.navigation div {
+	display: flex;
+	align-items: center;
+	gap: 15px 28px;
+	min-height: 0%;
+}
+
+.link {
+	font-size: clamp(1rem, calc(0.3em + 1.15vw), 1.15rem);
+	font-weight: 500;
+	position: relative;
+
+	&::after {
+		content: "";
+		width: 100%;
+		height: 2px;
+		position: absolute;
+		bottom: -2px;
+		left: 0;
+		background-color: transparent;
+
+		transition: 0.25s background-color;
+	}
+
+	&.active::after {
+		background-color: var(--accent-color);
+	}
+}
+
+.burger {
+	display: none;
+}
+
+.overlay {
+	opacity: 0;
+	visibility: hidden;
+}
+
+@media (max-width: 800px) {
+	.header {
+		height: auto;
+	}
+	.content {
+		display: block;
+	}
+	.navigation div {
+		flex-direction: column;
+		align-items: flex-end;
+	}
+	.logo {
+		line-height: 100px;
+	}
+	.navigation {
+		display: grid;
+		grid-template-rows: 0fr;
+		overflow: hidden;
+		transition: grid-template-rows 0.3s;
+		text-align: right;
+
+		&.active {
+			grid-template-rows: 1fr;
+
+			div {
+				margin-bottom: 20px;
+			}
+		}
+	}
+
+	.burger {
+		display: block;
+		width: 3.75rem;
+		height: 3.75rem;
+		background-color: var(--accent-color);
+		position: absolute;
+		right: 16px;
+		top: 22px;
+		border-radius: 50%;
+
+		svg {
+			color: var(--main-color);
+			width: 60%;
+			height: 100%;
+		}
+	}
+
+	.overlay {
+		background-color: #00000066;
+		position: fixed;
+		top: 0;
+		right: 0;
+		bottom: 0;
+		left: 0;
+		transition: opacity 0.3s;
+		z-index: 8;
+
+		&.active {
+			opacity: 1;
+			visibility: visible;
+		}
+	}
+}

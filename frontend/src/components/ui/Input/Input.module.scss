@@ -1,0 +1,31 @@
+.input-wrapper {
+	position: relative;
+	width: 100%;
+	background-color: var(--add-color);
+	border-radius: 10px;
+}
+
+.input {
+	width: 100%;
+	padding: 1.25rem 3rem 1.25rem 1.25rem;
+	background-color: var(--add-color);
+	border-radius: 10px;
+
+	&::placeholder {
+		opacity: 0.4;
+		color: var(--font-color);
+	}
+
+	&:focus-visible {
+		outline: var(--font-color) solid 1px;
+	}
+}
+
+.icon {
+	position: absolute;
+	right: 1rem;
+	width: 1.5rem;
+	height: 1.5rem;
+	top: 50%;
+	translate: 0 -50%;
+}

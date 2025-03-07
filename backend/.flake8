@@ -1,0 +1,6 @@
+[flake8]
+max-line-length = 79
+application-import-names = myapp
+exclude = */migrations/, venv/, verdict.py, .venv/, */fixtures/
+application_import_names = users
+import-order-style = google

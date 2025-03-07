@@ -1,0 +1,27 @@
+.form {
+	max-width: 21.875rem;
+	min-width: 18.75rem;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.error,
+.global-error {
+	color: var(--danger-color);
+}
+
+.link {
+	color: var(--accent-color);
+	text-decoration: underline !important;
+}
+
+.submit-btn {
+	width: 100%;
+	margin-top: 10px;
+}
+
+.redirect-hint {
+	text-align: center;
+}
