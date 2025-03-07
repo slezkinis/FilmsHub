@@ -60,7 +60,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' # Only deploy on main branch
+    if: github.ref == 'refs/heads/master' # Only deploy on main branch
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -74,7 +74,7 @@ jobs:
           echo "POSTGRES_PASSWORD=postgres" >> .env
           echo "POSTGRES_HOST=localhost" >> .env
           echo "DJANGO_ALLOWED_HOSTS=*" >> .env
-          echo "SERVER_URL=http://prod-team-42-p2j2ueen.final.prodcontest.ru/api" >> .env
+          echo "SERVER_URL=$SERVER_URL/api" >> .env
           echo "TOGETHER_API=$TOGETHER_API" >> .env
           echo TOGETHER_URL="https://api.together.xyz/v1/chat/completions" >> .env
 
