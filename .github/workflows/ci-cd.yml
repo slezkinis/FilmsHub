@@ -3,7 +3,7 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # Update this with your default branch if needed
+      - master  # Update this with your default branch if needed
   pull_request:
 
 jobs:
