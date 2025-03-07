@@ -1,0 +1,99 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Update this with your default branch if needed
+  pull_request:
+
+jobs:
+  flake8-check:
+    runs-on: ubuntu-latest
+    container: python:3.13
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Flake8
+        run: |
+          cd backend/
+          flake8 .
+
+  django-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test123
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - "5432:5432"
+      steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python environment
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
+
+      - name: Run Tests
+        env:
+          POSTGRES_DB: test_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test123
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+        run: |
+          cd backend/src
+          python3 manage.py test
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' # Only deploy on main branch
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set deployment environment variables
+        run: |
+          echo "DJANGO_SECRET_KEY=django-insecure-@9b1@k3flporj=2unq2+c8yq_6=1oa%ecd0lcjpj_mkph5_quo" >> .env
+          echo "DJANGO_DEBUG=true" >> .env
+          echo "POSTGRES_DB=api_db" >> .env
+          echo "POSTGRES_USER=postgres" >> .env
+          echo "POSTGRES_PASSWORD=postgres" >> .env
+          echo "POSTGRES_HOST=localhost" >> .env
+          echo "DJANGO_ALLOWED_HOSTS=*" >> .env
+          echo "SERVER_URL=http://prod-team-42-p2j2ueen.final.prodcontest.ru/api" >> .env
+          echo "TOGETHER_API=$TOGETHER_API" >> .env
+          echo TOGETHER_URL="https://api.together.xyz/v1/chat/completions" >> .env
+
+      - name: Copy code to remote server
+        env:
+          SSH_USER: ${{ secrets.ENV_SSH_USER }}
+          SSH_HOST: ${{ secrets.ENV_SSH_HOST }}
+          SSH_PRIVATE_KEY_BASE64: ${{ secrets.ENV_PRIVATE_KEY_BASE64 }}
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY_BASE64 }}" | base64 -d > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-add ~/.ssh/id_rsa
+          scp -r . $SSH_USER@$SSH_HOST:~/app
+
+      - name: Run deployment commands on remote server
+        env:
+          SSH_USER: ${{ secrets.ENV_SSH_USER }}
+          SSH_HOST: ${{ secrets.ENV_SSH_HOST }}
+        run: |
+          ssh $SSH_USER@$SSH_HOST "chmod +x app/stop_containers.sh && ./app/stop_containers.sh"
+          ssh $SSH_USER@$SSH_HOST "cd app && docker compose --env-file .env up -d --build"
+          ssh $SSH_USER@$SSH_HOST "docker image prune -f"

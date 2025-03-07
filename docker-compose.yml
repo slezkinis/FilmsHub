@@ -22,7 +22,7 @@ services:
   api:
     build: ./backend
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_DB: api_db
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: db

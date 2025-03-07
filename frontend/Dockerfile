@@ -11,10 +11,10 @@ RUN npm ci
 RUN echo "SERVER_URL=${SERVER_URL}"
 # Copy source code
 COPY . .
-
+RUN npm run build
 RUN chmod +x check_api_status.sh
 
 # Build the application (Next.js 13+ uses output: 'export' for static generation)
-RUN npm run build
+#RUN npm run build
 
 CMD ./check_api_status.sh
